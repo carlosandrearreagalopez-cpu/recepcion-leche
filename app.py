@@ -8,7 +8,7 @@ from streamlit_drawable_canvas import st_canvas
 st.set_page_config(page_title="Recepción de Leche Cruda - LIF Brands", layout="wide")
 
 # ==========================================
-# ESTILOS CSS LIMPIOS (SIN AFECTAR COMPONENTES)
+# ESTILOS CSS CON COLORES OFICIALES LIF BRANDS
 # ==========================================
 st.markdown("""
     <style>
@@ -17,32 +17,64 @@ st.markdown("""
             background-color: #FFFFFF !important;
         }
         
-        /* Tipografía Arial para textos generales */
+        /* Tipografía Arial para todos los textos */
         html, body, [class*="css"], p, span, label {
             font-family: Arial, sans-serif !important;
             color: #000000 !important;
         }
 
-        /* Títulos principales con el azul corporativo de LIF Brands */
+        /* Títulos principales con el Azul Oscuro de LIF Brands */
         h1, h2, h3, h4, h5, h6 {
-            color: #2c3e7d !important;
+            color: #1e3a8a !important;
             font-family: Arial, sans-serif !important;
         }
 
-        /* Etiquetas de los formularios claramente visibles */
+        /* Etiquetas de los formularios visibles y formales */
         .stTextInput label, .stSelectbox label, .stDateInput label, .stNumberInput label, .stRadio label, .stFileUploader label {
-            color: #000000 !important;
+            color: #1e3a8a !important;
             font-weight: bold !important;
         }
 
-        /* Tarjetas de investigación */
+        /* Botones generales (Fondo blanco, borde y texto en Azul Corporativo) */
+        .stButton>button {
+            background-color: #FFFFFF !important;
+            color: #1e3a8a !important;
+            border: 2px solid #1e3a8a !important;
+            border-radius: 6px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+        }
+        .stButton>button:hover {
+            background-color: #1e3a8a !important;
+            color: #FFFFFF !important;
+        }
+
+        /* Botón de envío principal con el Azul Corporativo lleno */
+        button[kind="primary"] {
+            background-color: #1e3a8a !important;
+            color: #FFFFFF !important;
+            border: none !important;
+        }
+        button[kind="primary"]:hover {
+            background-color: #3b82f6 !important;
+        }
+
+        /* Campos de entrada (inputs) claros y legibles */
+        input, select {
+            background-color: #f8fafc !important;
+            color: #000000 !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 4px;
+        }
+
+        /* Tarjetas de investigación con acento en Azul Claro */
         .card-investigacion {
             padding: 15px; 
-            border: 1px solid #dcdcdc; 
+            border: 1px solid #e2e8f0; 
             border-radius: 8px; 
             margin-bottom: 10px; 
-            background-color: #f9fbfd;
-            border-left: 5px solid #3aa6f8;
+            background-color: #f8fafc;
+            border-left: 5px solid #3b82f6;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -93,9 +125,9 @@ if st.session_state["nav_state"] == "home":
         
         mostrar_logo(ancho=200)
         
-        st.markdown("<h1 style='text-align: center; color: #2c3e7d;'>Ingresos a bodega</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #76bc21; font-weight: bold; font-size: 16px;'>LIF Brands — Aseguramiento de Calidad</p>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #555555;'>Documentación de recepción de materiales</p>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; color: #1e3a8a;'>Ingresos a bodega</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #65a30d; font-weight: bold; font-size: 16px;'>LIF Brands — Aseguramiento de Calidad</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #475569;'>Documentación de recepción de materiales</p>", unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -125,7 +157,7 @@ elif st.session_state["nav_state"] == "form_login":
         st.markdown("Ingrese la contraseña autorizada para reportar un nuevo ingreso:")
         
         password_form = st.text_input("Contraseña de ingreso", type="password")
-        if st.button("Verificar Acceso", use_container_width=True):
+        if st.button("Verificar Acceso", use_container_width=True, type="primary"):
             if password_form == "1234":
                 st.session_state["form_logueado"] = True
                 st.session_state["nav_state"] = "form"
@@ -263,13 +295,13 @@ elif st.session_state["nav_state"] == "form":
             with rc3:
                 resolucion_recepcion = st.radio("Resolución de Recepción", ["Si", "No"], horizontal=True)
             
-            submitted = st.form_submit_button("Guardar Registro de Recepción")
+            submitted = st.form_submit_button("Guardar Registro de Recepción", type="primary")
 
         st.subheader("Firma del Responsable (Dibuje su firma en el recuadro)")
         canvas_result = st_canvas(
-            fill_color="rgba(118, 188, 33, 0.3)",
+            fill_color="rgba(101, 163, 13, 0.3)",
             stroke_width=2,
-            stroke_color="#2c3e7d",
+            stroke_color="#1e3a8a",
             background_color="#FFFFFF",
             height=150,
             width=500,
@@ -352,7 +384,7 @@ elif st.session_state["nav_state"] == "admin_login":
         st.markdown("Ingrese la contraseña de administrador para acceder a los registros y reportes.")
         
         password_input = st.text_input("Contraseña de administrador", type="password")
-        if st.button("Verificar Acceso", use_container_width=True):
+        if st.button("Verificar Acceso", use_container_width=True, type="primary"):
             if password_input == "glad726lif":
                 st.session_state["admin_logueado"] = True
                 st.session_state["nav_state"] = "admin_dashboard"
@@ -397,7 +429,7 @@ elif st.session_state["nav_state"] == "admin_dashboard":
             st.subheader("✏️ Corregir o Editar Registros")
             df_editado = st.data_editor(df_registros, num_rows="dynamic", key="editor_excel")
             
-            if st.button("💾 Guardar correcciones en el Excel"):
+            if st.button("💾 Guardar correcciones en el Excel", type="primary"):
                 if "Fecha_Recepcion_dt" in df_editado.columns:
                     df_editado = df_editado.drop(columns=["Fecha_Recepcion_dt"])
                 if "Semana" in df_editado.columns:
@@ -411,7 +443,7 @@ elif st.session_state["nav_state"] == "admin_dashboard":
             indices_disponibles = list(df_registros.index)
             if indices_disponibles:
                 fila_a_eliminar = st.selectbox("Seleccione el número de fila del registro a eliminar", indices_disponibles)
-                if st.button("🗑️ Eliminar este registro definitivamente", type="primary"):
+                if st.button("🗑️ Eliminar este registro definitivamente"):
                     df_registros = df_registros.drop(fila_a_eliminar).reset_index(drop=True)
                     if "Fecha_Recepcion_dt" in df_registros.columns:
                         df_registros = df_registros.drop(columns=["Fecha_Recepcion_dt"])
@@ -454,8 +486,8 @@ elif st.session_state["nav_state"] == "admin_dashboard":
                 with st.container():
                     st.markdown(f"""
                     <div class="card-investigacion">
-                        <b style="color: #2c3e7d;">⏳ Ingreso #{idx} — Proveedor: {row.get('Proveedor', 'N/A')}</b> <br>
-                        <span style="color: #555555;">Fecha: {row.get('Fecha_Recepcion', 'N/A')} | Responsable: {row.get('Responsable', 'N/A')} | Litros: {row.get('Cantidad_Litros', 0)} L</span>
+                        <b style="color: #1e3a8a;">⏳ Ingreso #{idx} — Proveedor: {row.get('Proveedor', 'N/A')}</b> <br>
+                        <span style="color: #475569;">Fecha: {row.get('Fecha_Recepcion', 'N/A')} | Responsable: {row.get('Responsable', 'N/A')} | Litros: {row.get('Cantidad_Litros', 0)} L</span>
                     </div>
                     """, unsafe_allow_html=True)
                     
