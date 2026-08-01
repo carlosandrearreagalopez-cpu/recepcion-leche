@@ -35,18 +35,22 @@ st.markdown("""
             font-weight: bold !important;
         }
 
-        /* Limpiar y ocultar el texto duplicado del botón de carga manteniendo el diseño limpio */
-        [data-testid="stFileUploader"] section div button {
-            color: transparent !important;
+        /* Ocultar el texto nativo duplicado del cargador de archivos */
+        [data-testid="stFileUploader"] section div button div {
+            visibility: hidden;
         }
         [data-testid="stFileUploader"] section div button::after {
-            content: "Examinar";
+            content: "Examinar archivos";
+            visibility: visible;
             color: #ffffff !important;
             position: absolute;
             left: 0; right: 0; top: 0; bottom: 0;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
         }
 
         /* Caja de carga de archivos (file_uploader) */
@@ -534,7 +538,7 @@ elif st.session_state["nav_state"] == "admin_dashboard":
                         with col_d1:
                             st.markdown(f"**Fecha y Hora del Registro:** {row.get('Fecha_Hora', '')}")
                             st.markdown(f"**Responsable:** {row.get('Responsable', '')}")
-                            st.markdown(f"**Fecha de Recepción:** {row.get('Fecha_Recepcion', '')}")
+                            st.markdown(f"**Fecha de Recepción:** {row.get('Fecha_Recepción', '')}")
                             st.markdown(f"**Proveedor:** {row.get('Proveedor', '')}")
                             st.markdown(f"**Cantidad Recibida:** {row.get('Cantidad_Litros', '')} Litros")
                             st.markdown(f"**Limpieza Exterior:** {row.get('Limpieza_Exterior', '')}")
