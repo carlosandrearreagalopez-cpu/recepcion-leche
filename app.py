@@ -35,17 +35,21 @@ st.markdown("""
             font-weight: bold !important;
         }
 
-        /* Personalización de los Radio Buttons (Círculos con los colores corporativos) */
-        div[row-widget="stRadio"] div[role="radiogroup"] label div:first-child {
-            background-color: #ffffff !important;
-            border: 2px solid #1e3a8a !important;
+        /* Limpiar y ocultar el texto duplicado del botón de carga manteniendo el diseño limpio */
+        [data-testid="stFileUploader"] section div button {
+            color: transparent !important;
         }
-        div[row-widget="stRadio"] input:checked + div div:first-child {
-            background-color: #65a30d !important; /* Verde vivo de la hoja de LIF Brands */
-            border-color: #65a30d !important;
+        [data-testid="stFileUploader"] section div button::after {
+            content: "Examinar";
+            color: #ffffff !important;
+            position: absolute;
+            left: 0; right: 0; top: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Limpiar y aclarar por completo la caja de carga de archivos (file_uploader) */
+        /* Caja de carga de archivos (file_uploader) */
         [data-testid="stFileUploader"] {
             background-color: #f8fafc !important;
             border: 2px dashed #cbd5e1 !important;
@@ -57,7 +61,6 @@ st.markdown("""
         }
         [data-testid="stFileUploader"] button {
             background-color: #1e3a8a !important;
-            color: #ffffff !important;
             border: none !important;
             border-radius: 4px !important;
         }
