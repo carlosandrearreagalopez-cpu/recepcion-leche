@@ -30,14 +30,9 @@ st.markdown("""
         }
 
         /* Etiquetas de los formularios visibles y formales */
-        .stTextInput label, .stSelectbox label, .stDateInput label, .stNumberInput label, .stRadio label, .stFileUploader label {
+        .stTextInput label, .stSelectbox label, .stDateInput label, .stNumberInput label, .stRadio label {
             color: #1e3a8a !important;
             font-weight: bold !important;
-        }
-
-        /* Ocultar el texto duplicado "Upload" haciéndolo invisible (blanco sobre azul) */
-        [data-testid="stFileUploader"] section div button {
-            color: #1e3a8a !important;
         }
 
         /* Caja de carga de archivos (file_uploader) limpia */
@@ -300,7 +295,8 @@ elif st.session_state["nav_state"] == "form":
                 agua_anadida = st.number_input("Agua res", format="%.2f", label_visibility="collapsed", key="agua")
 
             st.subheader("Evidencia fotográfica (Antibióticos)")
-            foto_antibioticos = st.file_uploader("Subir imagen o tomar foto de la prueba", type=["jpg", "jpeg", "png"], key="foto_antibioticos")
+            st.markdown("<span style='color: #1e3a8a; font-weight: bold;'>Subir imagen o tomar foto de la prueba</span>", unsafe_allow_html=True)
+            foto_antibioticos = st.file_uploader("Evidencia fotográfica", type=["jpg", "jpeg", "png"], label_visibility="collapsed", key="foto_antibioticos")
 
             st.header("4. Carga/Descarga y Resolución")
             st.markdown("**Evaluación final del proceso y decisión de calidad.**")
