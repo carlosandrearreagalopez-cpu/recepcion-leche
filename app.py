@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 from streamlit_drawable_canvas import st_canvas
 from openpyxl.worksheet.table import Table, TableStyleInfo
+from openpyxl.utils import get_column_letter
 
 # Configuración de la página
 st.set_page_config(page_title="Recepción de Leche Cruda - LIF Brands", layout="wide")
@@ -135,27 +136,30 @@ def guardar_en_excel(datos_dict):
     else:
         df_final = df_nuevo
     
-    # Guardar como tabla estructurada de Excel usando openpyxl
+    # Guardar como tabla estructurada y autoajustar columnas
     with pd.ExcelWriter(EXCEL_FILE, engine="openpyxl") as writer:
         df_final.to_excel(writer, index=False, sheet_name="Registros")
         ws = writer.sheets["Registros"]
         
         if len(df_final) > 0:
-            # Definir el rango de celdas que ocupará la tabla
             max_row = len(df_final) + 1
             max_col = len(df_final.columns)
-            
-            # Convertir las letras de columnas a notación Excel (ej: A1:AD10)
-            from openpyxl.utils import get_column_letter
             col_letter = get_column_letter(max_col)
             table_range = f"A1:{col_letter}{max_row}"
             
-            # Crear la tabla con diseño profesional (Estilo Azul Medio / TableStyleMedium9)
             tab = Table(displayName="TablaRegistrosLeche", ref=table_range)
             style = TableStyleInfo(name="TableStyleMedium9", showFirstColumn=False,
                                    showLastColumn=False, showRowStripes=True, showColumnStripes=False)
             tab.tableStyleInfo = style
             ws.add_table(tab)
+            
+            for col in ws.columns:
+                max_len = 0
+                col_letter_current = get_column_letter(col[0].column)
+                for cell in col:
+                    if cell.value is not None:
+                        max_len = max(max_len, len(str(cell.value)))
+                ws.column_dimensions[col_letter_current].width = max(max_len + 4, 15)
 
 # Control de navegación principal
 if "nav_state" not in st.session_state:
@@ -470,14 +474,12 @@ elif st.session_state["nav_state"] == "admin_dashboard":
                 if "Semana" in df_editado.columns:
                     df_editado = df_editado.drop(columns=["Semana"])
                 
-                # Guardar cambios desde el editor manteniendo el formato de tabla oficial
                 with pd.ExcelWriter(EXCEL_FILE, engine="openpyxl") as writer:
                     df_editado.to_excel(writer, index=False, sheet_name="Registros")
                     ws = writer.sheets["Registros"]
                     if len(df_editado) > 0:
                         max_row = len(df_editado) + 1
                         max_col = len(df_editado.columns)
-                        from openpyxl.utils import get_column_letter
                         col_letter = get_column_letter(max_col)
                         table_range = f"A1:{col_letter}{max_row}"
                         tab = Table(displayName="TablaRegistrosLeche", ref=table_range)
@@ -485,6 +487,14 @@ elif st.session_state["nav_state"] == "admin_dashboard":
                                                showLastColumn=False, showRowStripes=True, showColumnStripes=False)
                         tab.tableStyleInfo = style
                         ws.add_table(tab)
+                        
+                        for col in ws.columns:
+                            max_len = 0
+                            col_letter_current = get_column_letter(col[0].column)
+                            for cell in col:
+                                if cell.value is not None:
+                                    max_len = max(max_len, len(str(cell.value)))
+                            ws.column_dimensions[col_letter_current].width = max(max_len + 4, 15)
 
                 st.success("¡Correcciones guardadas exitosamente!")
                 st.rerun()
@@ -501,14 +511,12 @@ elif st.session_state["nav_state"] == "admin_dashboard":
                     if "Semana" in df_registros.columns:
                         df_registros = df_registros.drop(columns=["Semana"])
                     
-                    # Guardar archivo actualizado manteniendo la estructura de tabla
                     with pd.ExcelWriter(EXCEL_FILE, engine="openpyxl") as writer:
                         df_registros.to_excel(writer, index=False, sheet_name="Registros")
                         ws = writer.sheets["Registros"]
                         if len(df_registros) > 0:
                             max_row = len(df_registros) + 1
                             max_col = len(df_registros.columns)
-                            from openpyxl.utils import get_column_letter
                             col_letter = get_column_letter(max_col)
                             table_range = f"A1:{col_letter}{max_row}"
                             tab = Table(displayName="TablaRegistrosLeche", ref=table_range)
@@ -516,6 +524,14 @@ elif st.session_state["nav_state"] == "admin_dashboard":
                                                    showLastColumn=False, showRowStripes=True, showColumnStripes=False)
                             tab.tableStyleInfo = style
                             ws.add_table(tab)
+                            
+                            for col in ws.columns:
+                                max_len = 0
+                                col_letter_current = get_column_letter(col[0].column)
+                                for cell in col:
+                                    if cell.value is not None:
+                                        max_len = max(max_len, len(str(cell.value)))
+                                ws.column_dimensions[col_letter_current].width = max(max_len + 4, 15)
 
                     st.success(f"¡El registro de la fila {fila_a_eliminar} fue eliminado correctamente!")
                     st.rerun()
