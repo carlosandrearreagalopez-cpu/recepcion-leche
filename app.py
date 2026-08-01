@@ -8,7 +8,7 @@ from streamlit_drawable_canvas import st_canvas
 st.set_page_config(page_title="Recepción de Leche Cruda - LIF Brands", layout="wide")
 
 # ==========================================
-# ESTILOS CSS (FONDO BLANCO Y FUENTE ARIAL)
+# ESTILOS CSS CORREGIDOS (TEXTO NEGRO Y FONDO BLANCO)
 # ==========================================
 st.markdown("""
     <style>
@@ -17,30 +17,36 @@ st.markdown("""
             background-color: #FFFFFF !important;
         }
         
-        /* Aplicar tipografía Arial a todo el texto */
-        html, body, [class*="css"] {
+        /* Forzar color de texto negro y fuente Arial en toda la aplicación */
+        html, body, [class*="css"], p, span, label, div {
             font-family: Arial, sans-serif !important;
-            color: #333333;
+            color: #000000 !important;
         }
 
-        /* Títulos corporativos con el azul de LIF Brands */
-        h1, h2, h3 {
+        /* Títulos principales con el azul corporativo de LIF Brands */
+        h1, h2, h3, h4, h5, h6 {
             color: #2c3e7d !important;
             font-family: Arial, sans-serif !important;
         }
 
+        /* Forzar texto visible y oscuro en etiquetas de inputs y radios */
+        .stTextInput label, .stSelectbox label, .stDateInput label, .stNumberInput label, .stRadio label {
+            color: #000000 !important;
+            font-weight: bold !important;
+        }
+
         /* Botones principales de Streamlit */
         .stButton>button {
-            background-color: #2c3e7d;
-            color: white;
+            background-color: #2c3e7d !important;
+            color: white !important;
             border-radius: 6px;
             font-family: Arial, sans-serif;
             font-weight: bold;
             border: none;
         }
         .stButton>button:hover {
-            background-color: #3aa6f8;
-            color: white;
+            background-color: #3aa6f8 !important;
+            color: white !important;
         }
 
         /* Tarjetas de investigación */
@@ -70,7 +76,7 @@ def mostrar_logo(ancho=160):
     if os.path.exists("logo.png"):
         st.image("logo.png", width=ancho)
     else:
-        st.warning("⚠️ Logo no encontrado. Sube un archivo llamado 'logo.png' a tu repositorio de GitHub.")
+        st.warning("⚠️ Logo no encontrado. Asegúrate de tener el archivo 'logo.png' en tu repositorio de GitHub.")
 
 def guardar_en_excel(datos_dict):
     df_nuevo = pd.DataFrame([datos_dict])
@@ -103,7 +109,7 @@ if st.session_state["nav_state"] == "home":
         
         st.markdown("<h1 style='text-align: center; color: #2c3e7d;'>Ingresos a bodega</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #76bc21; font-weight: bold; font-size: 16px;'>LIF Brands — Aseguramiento de Calidad</p>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: gray;'>Documentación de recepción de materiales</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #555555;'>Documentación de recepción de materiales</p>", unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -463,7 +469,7 @@ elif st.session_state["nav_state"] == "admin_dashboard":
                     st.markdown(f"""
                     <div class="card-investigacion">
                         <b style="color: #2c3e7d;">⏳ Ingreso #{idx} — Proveedor: {row.get('Proveedor', 'N/A')}</b> <br>
-                        <span style="color: gray;">Fecha: {row.get('Fecha_Recepcion', 'N/A')} | Responsable: {row.get('Responsable', 'N/A')} | Litros: {row.get('Cantidad_Litros', 0)} L</span>
+                        <span style="color: #555555;">Fecha: {row.get('Fecha_Recepcion', 'N/A')} | Responsable: {row.get('Responsable', 'N/A')} | Litros: {row.get('Cantidad_Litros', 0)} L</span>
                     </div>
                     """, unsafe_allow_html=True)
                     
