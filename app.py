@@ -35,6 +35,11 @@ st.markdown("""
             font-weight: bold !important;
         }
 
+        /* Ocultar el texto duplicado "Upload" haciéndolo invisible (blanco sobre azul) */
+        [data-testid="stFileUploader"] section div button {
+            color: #1e3a8a !important;
+        }
+
         /* Caja de carga de archivos (file_uploader) limpia */
         [data-testid="stFileUploader"] {
             background-color: #f8fafc !important;
