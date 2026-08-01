@@ -66,6 +66,17 @@ h1, h2, h3, h4, h5, h6 {
     color: #334155 !important;
 }
 
+/* Forzar diseño claro y visible en el editor de datos (st.data_editor) */
+[data-testid="stDataFrame"] div[data-baseweb="base-input"], [data-testid="stDataFrame"] table {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+}
+[data-testid="stDataFrame"] th {
+    background-color: #f1f5f9 !important;
+    color: #1e3a8a !important;
+    font-weight: bold !important;
+}
+
 /* Botones generales (Fondo blanco, borde y texto en Azul Corporativo) */
 .stButton>button {
     background-color: #FFFFFF !important;
@@ -113,11 +124,14 @@ input, select {
 # Directorios para archivos y firmas
 FOTOS_DIR = "fotos_recepcion"
 FIRMAS_DIR = "firmas_recepcion"
+FIRMAS_REGISTRADAS_DIR = "firmas_registradas"
 
 if not os.path.exists(FOTOS_DIR):
     os.makedirs(FOTOS_DIR)
 if not os.path.exists(FIRMAS_DIR):
     os.makedirs(FIRMAS_DIR)
+if not os.path.exists(FIRMAS_REGISTRADAS_DIR):
+    os.makedirs(FIRMAS_REGISTRADAS_DIR)
 
 EXCEL_FILE = "registros_recepcion_leche.xlsx"
 
@@ -136,7 +150,6 @@ def guardar_en_excel(datos_dict):
     else:
         df_final = df_nuevo
     
-    # Guardar como tabla estructurada y autoajustar columnas
     with pd.ExcelWriter(EXCEL_FILE, engine="openpyxl") as writer:
         df_final.to_excel(writer, index=False, sheet_name="Registros")
         ws = writer.sheets["Registros"]
@@ -337,36 +350,73 @@ elif st.session_state["nav_state"] == "form":
             with rc3:
                 resolucion_recepcion = st.radio("Resolución de Recepción", ["Si", "No"], horizontal=True)
 
-            submitted = st.form_submit_button("Guardar Registro de Recepción", type="primary")
+            st.subheader("Firma del Responsable")
+            
+            # Verificar si el responsable ya tiene una firma guardada
+            safe_name = nombre_responsable.replace(" ", "_").lower()
+            firma_path_guardada = os.path.join(FIRMAS_REGISTRADAS_DIR, f"firma_reg_{safe_name}.png")
+            tiene_firma_previa = os.path.exists(firma_path_guardada)
 
-            st.subheader("Firma del Responsable (Dibuje su firma en el recuadro)")
-            canvas_result = st_canvas(
-                fill_color="rgba(101, 163, 13, 0.3)",
-                stroke_width=2,
-                stroke_color="#1e3a8a",
-                background_color="#FFFFFF",
-                height=150,
-                width=500,
-                drawing_mode="freedraw",
-                key="canvas_firma",
-            )
+            modo_firma = "Usar firma guardada"
+            if tiene_firma_previa:
+                st.info(f"Se encontró una firma registrada previamente para **{nombre_responsable}**.")
+                st.image(firma_path_guardada, width=300, caption=f"Firma asociada a {nombre_responsable}")
+                modo_firma = st.radio("Seleccione opción de firma", ["Usar firma guardada", "Dibujar nueva firma"], horizontal=True)
+            else:
+                st.warning(f"No hay una firma guardada para **{nombre_responsable}**. Por favor dibújela (se guardará automáticamente para futuros registros).")
+                modo_firma = "Dibujar nueva firma"
+
+            canvas_result = None
+            if modo_firma == "Dibujar nueva firma":
+                st.markdown("Dibuje su firma en el recuadro:")
+                canvas_result = st_canvas(
+                    fill_color="rgba(101, 163, 13, 0.3)",
+                    stroke_width=2,
+                    stroke_color="#1e3a8a",
+                    background_color="#FFFFFF",
+                    height=150,
+                    width=500,
+                    drawing_mode="freedraw",
+                    key="canvas_firma",
+                )
+
+            submitted = st.form_submit_button("Guardar Registro de Recepción", type="primary")
 
         if submitted:
             if proveedor_opcion == "Otro" and not proveedor_final.strip():
                 st.error("Por favor, ingrese el nombre del nuevo proveedor.")
             else:
                 timestamp_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                safe_name = nombre_responsable.replace(" ", "_").lower()
+                firma_path_guardada = os.path.join(FIRMAS_REGISTRADAS_DIR, f"firma_reg_{safe_name}.png")
                 
                 nombre_firma_guardada = "Sin firma"
-                if canvas_result.image_data is not None:
-                    import numpy as np
-                    from PIL import Image
-                    img_data = canvas_result.image_data
-                    img = Image.fromarray(img_data.astype('uint8'), mode="RGBA")
-                    nombre_firma_guardada = f"firma_{timestamp_str}.png"
-                    ruta_firma = os.path.join(FIRMAS_DIR, nombre_firma_guardada)
-                    img.save(ruta_firma)
-                
+
+                if modo_firma == "Dibujar nueva firma":
+                    if canvas_result.image_data is not None:
+                        import numpy as np
+                        from PIL import Image
+                        img_data = canvas_result.image_data
+                        img = Image.fromarray(img_data.astype('uint8'), mode="RGBA")
+                        nombre_firma_guardada = f"firma_{timestamp_str}.png"
+                        ruta_firma = os.path.join(FIRMAS_DIR, nombre_firma_guardada)
+                        img.save(ruta_firma)
+                        # Guardar copia persistente para este responsable
+                        img.save(firma_path_guardada)
+                    else:
+                        st.error("Por favor, dibuje su firma en el recuadro.")
+                        st.stop()
+                else:
+                    # Usar la firma guardada existente
+                    if os.path.exists(firma_path_guardada):
+                        nombre_firma_guardada = f"firma_{timestamp_str}.png"
+                        ruta_firma = os.path.join(FIRMAS_DIR, nombre_firma_guardada)
+                        import shutil
+                        shutil.copy(firma_path_guardada, ruta_firma)
+                    else:
+                        st.error("No se encontró la firma registrada. Por favor seleccione 'Dibujar nueva firma'.")
+                        st.stop()
+
                 nombre_foto_guardada = "Sin imagen"
                 if foto_antibioticos is not None:
                     nombre_foto_guardada = f"antibioticos_{timestamp_str}.png"
