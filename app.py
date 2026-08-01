@@ -66,7 +66,7 @@ if st.session_state["nav_state"] == "home":
                 st.rerun()
 
 # ==========================================
-# LOGIN PARA NUEVO INGRESO (SIN MOSTRAR CLAVE)
+# LOGIN PARA NUEVO INGRESO
 # ==========================================
 elif st.session_state["nav_state"] == "form_login":
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -334,59 +334,151 @@ elif st.session_state["nav_state"] == "admin_dashboard":
     elif os.path.exists("logo.png"):
         st.image("logo.png", width=120)
         
-    st.header("📊 Panel de Administrador: Base de Datos, Edición y Reportes")
+    st.header("📊 Panel de Administrador")
     
     if os.path.exists(EXCEL_FILE):
         df_registros = pd.read_excel(EXCEL_FILE)
         
-        df_registros["Fecha_Recepcion_dt"] = pd.to_datetime(df_registros["Fecha_Recepcion"], errors="coerce")
-        df_registros["Semana"] = df_registros["Fecha_Recepcion_dt"].dt.to_period("W").astype(str)
+        # Pestañas principales de navegación del administrador
+        tab_tabla, tab_investigacion = st.tabs(["📋 Todos los Registros (Excel y Edición)", "🔍 Investigación"])
         
-        st.subheader("📈 Resumen de Ingresos Semanales (Litros)")
-        if "Cantidad_Litros" in df_registros.columns and "Semana" in df_registros.columns:
-            df_semanal = df_registros.groupby("Semana")["Cantidad_Litros"].sum().reset_index()
-            df_semanal.columns = ["Semana", "Total Litros Recibidos"]
-            st.dataframe(df_semanal, use_container_width=True)
-            st.bar_chart(df_semanal.set_index("Semana"))
-        
-        st.write("---")
-        st.subheader("✏️ Corregir o Editar Registros (Directo en el Excel)")
-        st.markdown("Puedes modificar cualquier celda directamente en la siguiente tabla interactiva. Los cambios se guardarán automáticamente en el archivo de Excel al hacer clic en el botón de abajo.")
-        
-        df_editado = st.data_editor(df_registros, num_rows="dynamic", key="editor_excel")
-        
-        if st.button("💾 Guardar correcciones en el Excel"):
-            if "Fecha_Recepcion_dt" in df_editado.columns:
-                df_editado = df_editado.drop(columns=["Fecha_Recepcion_dt"])
-            if "Semana" in df_editado.columns:
-                df_editado = df_editado.drop(columns=["Semana"])
-            df_editado.to_excel(EXCEL_FILE, index=False)
-            st.success("¡Correcciones guardadas exitosamente en el archivo Excel!")
-            st.rerun()
-
-        st.write("---")
-        st.subheader("🗑️ Eliminar Registro de Prueba")
-        indices_disponibles = list(df_registros.index)
-        if indices_disponibles:
-            fila_a_eliminar = st.selectbox("Seleccione el número de fila del registro a eliminar", indices_disponibles)
-            if st.button("🗑️ Eliminar este registro definitivamente", type="primary"):
-                df_registros = df_registros.drop(fila_a_eliminar).reset_index(drop=True)
-                if "Fecha_Recepcion_dt" in df_registros.columns:
-                    df_registros = df_registros.drop(columns=["Fecha_Recepcion_dt"])
-                if "Semana" in df_registros.columns:
-                    df_registros = df_registros.drop(columns=["Semana"])
-                df_registros.to_excel(EXCEL_FILE, index=False)
-                st.success(f"¡El registro de la fila {fila_a_eliminar} fue eliminado correctamente!")
+        # --- PESTAÑA 1: TABLA GENERAL Y EDICIÓN ---
+        with tab_tabla:
+            df_registros["Fecha_Recepcion_dt"] = pd.to_datetime(df_registros["Fecha_Recepcion"], errors="coerce")
+            df_registros["Semana"] = df_registros["Fecha_Recepcion_dt"].dt.to_period("W").astype(str)
+            
+            st.subheader("📈 Resumen de Ingresos Semanales (Litros)")
+            if "Cantidad_Litros" in df_registros.columns and "Semana" in df_registros.columns:
+                df_semanal = df_registros.groupby("Semana")["Cantidad_Litros"].sum().reset_index()
+                df_semanal.columns = ["Semana", "Total Litros Recibidos"]
+                st.dataframe(df_semanal, use_container_width=True)
+                st.bar_chart(df_semanal.set_index("Semana"))
+            
+            st.write("---")
+            st.subheader("✏️ Corregir o Editar Registros")
+            df_editado = st.data_editor(df_registros, num_rows="dynamic", key="editor_excel")
+            
+            if st.button("💾 Guardar correcciones en el Excel"):
+                if "Fecha_Recepcion_dt" in df_editado.columns:
+                    df_editado = df_editado.drop(columns=["Fecha_Recepcion_dt"])
+                if "Semana" in df_editado.columns:
+                    df_editado = df_editado.drop(columns=["Semana"])
+                df_editado.to_excel(EXCEL_FILE, index=False)
+                st.success("¡Correcciones guardadas exitosamente!")
                 st.rerun()
-        
-        st.write("---")
-        st.subheader("📥 Descargar Base de Datos Completa")
-        with open(EXCEL_FILE, "rb") as f:
-            st.download_button(
-                label="📥 Descargar Excel con toda la información",
-                data=f,
-                file_name="registros_recepcion_leche.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+
+            st.write("---")
+            st.subheader("🗑️ Eliminar Registro de Prueba")
+            indices_disponibles = list(df_registros.index)
+            if indices_disponibles:
+                fila_a_eliminar = st.selectbox("Seleccione el número de fila del registro a eliminar", indices_disponibles)
+                if st.button("🗑️ Eliminar este registro definitivamente", type="primary"):
+                    df_registros = df_registros.drop(fila_a_eliminar).reset_index(drop=True)
+                    if "Fecha_Recepcion_dt" in df_registros.columns:
+                        df_registros = df_registros.drop(columns=["Fecha_Recepcion_dt"])
+                    if "Semana" in df_registros.columns:
+                        df_registros = df_registros.drop(columns=["Semana"])
+                    df_registros.to_excel(EXCEL_FILE, index=False)
+                    st.success(f"¡El registro de la fila {fila_a_eliminar} fue eliminado correctamente!")
+                    st.rerun()
+            
+            st.write("---")
+            with open(EXCEL_FILE, "rb") as f:
+                st.download_button(
+                    label="📥 Descargar Excel completo",
+                    data=f,
+                    file_name="registros_recepcion_leche.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+
+        # --- PESTAÑA 2: INVESTIGACIÓN DETALLADA ---
+        with tab_investigacion:
+            st.subheader("🔍 Consulta e Investigación por Registro")
+            
+            # Filtro por fecha o proveedor
+            col_f1, col_f2 = st.columns(2)
+            with col_f1:
+                filtro_fecha = st.date_input("Filtrar por fecha de recepción (Opcional)", value=None)
+            with col_f2:
+                proveedores_disponibles = ["Todos"] + list(df_registros["Proveedor"].dropna().unique())
+                filtro_proveedor = st.selectbox("Filtrar por Proveedor", proveedores_disponibles)
+                
+            df_filtrado = df_registros.copy()
+            if filtro_fecha:
+                df_filtrado = df_filtrado[df_filtrado["Fecha_Recepcion"].astype(str) == str(filtro_fecha)]
+            if filtro_proveedor != "Todos":
+                df_filtrado = df_filtrado[df_filtrado["Proveedor"] == filtro_proveedor]
+                
+            st.markdown(f"**Mostrando {len(df_filtrado)} registros encontrados:**")
+            st.write("---")
+            
+            for idx, row in df_filtrado.iterrows():
+                with st.container():
+                    st.markdown(f"""
+                    <div style="padding: 15px; border: 1px solid #dcdcdc; border-radius: 8px; margin-bottom: 10px; background-color: #fafafa;">
+                        <b>⏳ Ingreso #{idx} — Proveedor: {row.get('Proveedor', 'N/A')}</b> <br>
+                        <span style="color: gray;">Fecha: {row.get('Fecha_Recepcion', 'N/A')} | Responsable: {row.get('Responsable', 'N/A')} | Litros: {row.get('Cantidad_Litros', 0)} L</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Botón Ver detalle
+                    if st.button(f"Ver detalle completo #{idx}", key=f"btn_ver_{idx}"):
+                        st.markdown(f"### 📋 Detalle del Registro #{idx}")
+                        
+                        # Mostramos todas las preguntas y respuestas organizadas
+                        col_d1, col_d2 = st.columns(2)
+                        with col_d1:
+                            st.markdown(f"**Fecha y Hora del Registro:** {row.get('Fecha_Hora', '')}")
+                            st.markdown(f"**Responsable:** {row.get('Responsable', '')}")
+                            st.markdown(f"**Fecha de Recepción:** {row.get('Fecha_Recepcion', '')}")
+                            st.markdown(f"**Proveedor:** {row.get('Proveedor', '')}")
+                            st.markdown(f"**Cantidad Recibida:** {row.get('Cantidad_Litros', '')} Litros")
+                            st.markdown(f"**Limpieza Exterior:** {row.get('Limpieza_Exterior', '')}")
+                            st.markdown(f"**Salidas Selladas:** {row.get('Salidas_Selladas', '')}")
+                            st.markdown(f"**Desinfección Utensilios:** {row.get('Desinfeccion_Utensilios', '')}")
+                            st.markdown(f"**Temperatura:** {row.get('Temperatura_C', '')} °C")
+                            st.markdown(f"**Color:** {row.get('Color', '')}")
+                            st.markdown(f"**Olor:** {row.get('Olor', '')}")
+                            st.markdown(f"**Sabor:** {row.get('Sabor', '')}")
+                            st.markdown(f"**Apariencia:** {row.get('Apariencia', '')}")
+                        
+                        with col_d2:
+                            st.markdown(f"**pH:** {row.get('pH', '')}")
+                            st.markdown(f"**Ácido Láctico:** {row.get('Acido_Lactico', '')}")
+                            st.markdown(f"**Grasa:** {row.get('Grasa', '')}%")
+                            st.markdown(f"**Sólido No Graso:** {row.get('Solido_No_Graso', '')}%")
+                            st.markdown(f"**Sólido Total:** {row.get('Solido_Total', '')}%")
+                            st.markdown(f"**Densidad:** {row.get('Densidad', '')}")
+                            st.markdown(f"**Punto de Congelación:** {row.get('Punto_Congelacion', '')}")
+                            st.markdown(f"**Proteína:** {row.get('Proteina', '')}%")
+                            st.markdown(f"**Lactosa:** {row.get('Lactosa', '')}%")
+                            st.markdown(f"**Conductividad:** {row.get('Conductividad', '')}")
+                            st.markdown(f"**Agua Añadida:** {row.get('Agua_Anadida', '')}%")
+                            st.markdown(f"**Antibióticos:** {row.get('Antibióticos_Resultado', '')}")
+                            st.markdown(f"**Peróxido:** {row.get('Peróxido', '')}")
+                        
+                        st.markdown("---")
+                        st.markdown("#### 🖼️ Evidencias y Firmas Registradas")
+                        img_col1, img_col2 = st.columns(2)
+                        
+                        with img_col1:
+                            st.markdown("**Evidencia Fotográfica (Antibióticos):**")
+                            nombre_foto = row.get('Evidencia_Foto', 'Sin imagen')
+                            ruta_foto_servidor = os.path.join(FOTOS_DIR, str(nombre_foto))
+                            if nombre_foto != "Sin imagen" and os.path.exists(ruta_foto_servidor):
+                                st.image(ruta_foto_servidor, caption="Prueba de Antibióticos", width=300)
+                            else:
+                                st.info("No hay imagen adjunta o no se encuentra en el servidor.")
+                                
+                        with img_col2:
+                            st.markdown("**Firma del Responsable:**")
+                            nombre_firma = row.get('Firma_Archivo', 'Sin firma')
+                            ruta_firma_servidor = os.path.join(FIRMAS_DIR, str(nombre_firma))
+                            if nombre_firma != "Sin firma" and os.path.exists(ruta_firma_servidor):
+                                st.image(ruta_firma_servidor, caption="Firma digital", width=300)
+                            else:
+                                st.info("No hay firma registrada.")
+                        st.write("---")
+
     else:
         st.info("Aún no hay registros guardados en el sistema.")
