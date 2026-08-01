@@ -8,7 +8,7 @@ from streamlit_drawable_canvas import st_canvas
 st.set_page_config(page_title="Recepción de Leche Cruda - LIF Brands", layout="wide")
 
 # ==========================================
-# ESTILOS CSS CORREGIDOS (TEXTO NEGRO Y FONDO BLANCO)
+# ESTILOS CSS CORREGIDOS (TEXTO LEGIBLE Y COMPONENTES CLAROS)
 # ==========================================
 st.markdown("""
     <style>
@@ -17,7 +17,7 @@ st.markdown("""
             background-color: #FFFFFF !important;
         }
         
-        /* Forzar color de texto negro y fuente Arial en toda la aplicación */
+        /* Tipografía Arial general */
         html, body, [class*="css"], p, span, label, div {
             font-family: Arial, sans-serif !important;
             color: #000000 !important;
@@ -29,10 +29,24 @@ st.markdown("""
             font-family: Arial, sans-serif !important;
         }
 
-        /* Forzar texto visible y oscuro en etiquetas de inputs y radios */
-        .stTextInput label, .stSelectbox label, .stDateInput label, .stNumberInput label, .stRadio label {
+        /* Etiquetas de los formularios */
+        .stTextInput label, .stSelectbox label, .stDateInput label, .stNumberInput label, .stRadio label, .stFileUploader label {
             color: #000000 !important;
             font-weight: bold !important;
+        }
+
+        /* Corregir cajones de subida de archivos (File Uploader) para que tengan fondo claro y texto legible */
+        [data-testid="stFileUploader"] {
+            background-color: #f0f2f6 !important;
+            border: 1px dashed #2c3e7d !important;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        [data-testid="stFileUploader"] section {
+            background-color: #f0f2f6 !important;
+        }
+        [data-testid="stFileUploader"] * {
+            color: #000000 !important;
         }
 
         /* Botones principales de Streamlit */
