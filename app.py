@@ -8,23 +8,22 @@ from streamlit_drawable_canvas import st_canvas
 st.set_page_config(page_title="Recepción de Leche Cruda - LIF Brands", layout="wide")
 
 # ==========================================
-# ESTILOS CSS PERSONALIZADOS (LIF BRANDS & FUENTE ARIAL)
+# ESTILOS CSS (FONDO BLANCO Y FUENTE ARIAL)
 # ==========================================
 st.markdown("""
     <style>
-        /* Aplicar Arial a toda la aplicación */
-        html, body, [class*="css"] {
-            font-family: Arial, sans-serif !important;
+        /* Fondo general de la aplicación totalmente blanco */
+        .stApp {
+            background-color: #FFFFFF !important;
         }
         
-        /* Colores corporativos principales */
-        :root {
-            --lif-azul-oscuro: #2c3e7d;
-            --lif-azul-claro: #3aa6f8;
-            --lif-verde: #76bc21;
+        /* Aplicar tipografía Arial a todo el texto */
+        html, body, [class*="css"] {
+            font-family: Arial, sans-serif !important;
+            color: #333333;
         }
 
-        /* Títulos principales */
+        /* Títulos corporativos con el azul de LIF Brands */
         h1, h2, h3 {
             color: #2c3e7d !important;
             font-family: Arial, sans-serif !important;
@@ -66,8 +65,12 @@ if not os.path.exists(FIRMAS_DIR):
 
 EXCEL_FILE = "registros_recepcion_leche.xlsx"
 
-# URL general del logo oficial de LIF Brands proporcionada
-LOGO_URL = "https://jobs.smartrecruiters.com/file/images/GrupoMariposa1/3743990010870024-coordinador-de-contabilidad"
+# Función segura para mostrar el logo local subido a GitHub
+def mostrar_logo(ancho=160):
+    if os.path.exists("logo.png"):
+        st.image("logo.png", width=ancho)
+    else:
+        st.warning("⚠️ Logo no encontrado. Sube un archivo llamado 'logo.png' a tu repositorio de GitHub.")
 
 def guardar_en_excel(datos_dict):
     df_nuevo = pd.DataFrame([datos_dict])
@@ -96,7 +99,7 @@ if st.session_state["nav_state"] == "home":
     with col2:
         st.markdown("<br><br>", unsafe_allow_html=True)
         
-        st.image(LOGO_URL, width=200)
+        mostrar_logo(ancho=200)
         
         st.markdown("<h1 style='text-align: center; color: #2c3e7d;'>Ingresos a bodega</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #76bc21; font-weight: bold; font-size: 16px;'>LIF Brands — Aseguramiento de Calidad</p>", unsafe_allow_html=True)
@@ -151,7 +154,7 @@ elif st.session_state["nav_state"] == "form":
         st.session_state["nav_state"] = "home"
         st.rerun()
         
-    st.image(LOGO_URL, width=140)
+    mostrar_logo(ancho=140)
         
     st.title("🥛 Registro de Recepción de Leche Cruda")
 
@@ -377,7 +380,7 @@ elif st.session_state["nav_state"] == "admin_dashboard":
         st.session_state["nav_state"] = "home"
         st.rerun()
         
-    st.image(LOGO_URL, width=140)
+    mostrar_logo(ancho=140)
         
     st.header("📊 Panel de Administrador")
     
