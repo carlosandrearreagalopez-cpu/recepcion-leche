@@ -5,7 +5,56 @@ from datetime import datetime
 from streamlit_drawable_canvas import st_canvas
 
 # Configuración de la página
-st.set_page_config(page_title="Recepción de Leche Cruda", layout="wide")
+st.set_page_config(page_title="Recepción de Leche Cruda - LIF Brands", layout="wide")
+
+# ==========================================
+# ESTILOS CSS PERSONALIZADOS (LIF BRANDS & FUENTE ARIAL)
+# ==========================================
+st.markdown("""
+    <style>
+        /* Aplicar Arial a toda la aplicación */
+        html, body, [class*="css"] {
+            font-family: Arial, sans-serif !important;
+        }
+        
+        /* Colores corporativos principales */
+        :root {
+            --lif-azul-oscuro: #2c3e7d;
+            --lif-azul-claro: #3aa6f8;
+            --lif-verde: #76bc21;
+        }
+
+        /* Títulos principales */
+        h1, h2, h3 {
+            color: #2c3e7d !important;
+            font-family: Arial, sans-serif !important;
+        }
+
+        /* Botones principales de Streamlit */
+        .stButton>button {
+            background-color: #2c3e7d;
+            color: white;
+            border-radius: 6px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            border: none;
+        }
+        .stButton>button:hover {
+            background-color: #3aa6f8;
+            color: white;
+        }
+
+        /* Tarjetas de investigación */
+        .card-investigacion {
+            padding: 15px; 
+            border: 1px solid #dcdcdc; 
+            border-radius: 8px; 
+            margin-bottom: 10px; 
+            background-color: #f9fbfd;
+            border-left: 5px solid #3aa6f8;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # Directorios para archivos y firmas
 FOTOS_DIR = "fotos_recepcion"
@@ -16,6 +65,9 @@ if not os.path.exists(FIRMAS_DIR):
     os.makedirs(FIRMAS_DIR)
 
 EXCEL_FILE = "registros_recepcion_leche.xlsx"
+
+# URL general del logo oficial de LIF Brands proporcionada
+LOGO_URL = "https://jobs.smartrecruiters.com/file/images/GrupoMariposa1/3743990010870024-coordinador-de-contabilidad"
 
 def guardar_en_excel(datos_dict):
     df_nuevo = pd.DataFrame([datos_dict])
@@ -44,11 +96,10 @@ if st.session_state["nav_state"] == "home":
     with col2:
         st.markdown("<br><br>", unsafe_allow_html=True)
         
-        if os.path.exists("logo.png"):
-            st.image("logo.png", width=180)
+        st.image(LOGO_URL, width=200)
         
-        st.markdown("<h1 style='text-align: center;'>Ingresos a bodega</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #2e7d32; font-weight: bold;'>LIF Brands — Aseguramiento de Calidad</p>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; color: #2c3e7d;'>Ingresos a bodega</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #76bc21; font-weight: bold; font-size: 16px;'>LIF Brands — Aseguramiento de Calidad</p>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: gray;'>Documentación de recepción de materiales</p>", unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
@@ -61,7 +112,7 @@ if st.session_state["nav_state"] == "home":
         
         col_link1, col_link2, col_link3 = st.columns([1, 2, 1])
         with col_link2:
-            if st.button("Revisar ingresos (administrador)", type="tertiary"):
+            if st.button("Revisar ingresos (administrador)"):
                 st.session_state["nav_state"] = "admin_login"
                 st.rerun()
 
@@ -100,10 +151,7 @@ elif st.session_state["nav_state"] == "form":
         st.session_state["nav_state"] = "home"
         st.rerun()
         
-    if os.path.exists("logo_ingreso.png"):
-        st.image("logo_ingreso.png", width=120)
-    elif os.path.exists("logo.png"):
-        st.image("logo.png", width=120)
+    st.image(LOGO_URL, width=140)
         
     st.title("🥛 Registro de Recepción de Leche Cruda")
 
@@ -224,9 +272,9 @@ elif st.session_state["nav_state"] == "form":
 
         st.subheader("Firma del Responsable (Dibuje su firma en el recuadro)")
         canvas_result = st_canvas(
-            fill_color="rgba(255, 165, 0, 0.3)",
+            fill_color="rgba(118, 188, 33, 0.3)",
             stroke_width=2,
-            stroke_color="#000000",
+            stroke_color="#2c3e7d",
             background_color="#FFFFFF",
             height=150,
             width=500,
@@ -329,17 +377,13 @@ elif st.session_state["nav_state"] == "admin_dashboard":
         st.session_state["nav_state"] = "home"
         st.rerun()
         
-    if os.path.exists("logo_admin.png"):
-        st.image("logo_admin.png", width=120)
-    elif os.path.exists("logo.png"):
-        st.image("logo.png", width=120)
+    st.image(LOGO_URL, width=140)
         
     st.header("📊 Panel de Administrador")
     
     if os.path.exists(EXCEL_FILE):
         df_registros = pd.read_excel(EXCEL_FILE)
         
-        # Pestañas principales de navegación del administrador
         tab_tabla, tab_investigacion = st.tabs(["📋 Todos los Registros (Excel y Edición)", "🔍 Investigación"])
         
         # --- PESTAÑA 1: TABLA GENERAL Y EDICIÓN ---
@@ -395,7 +439,6 @@ elif st.session_state["nav_state"] == "admin_dashboard":
         with tab_investigacion:
             st.subheader("🔍 Consulta e Investigación por Registro")
             
-            # Filtro por fecha o proveedor
             col_f1, col_f2 = st.columns(2)
             with col_f1:
                 filtro_fecha = st.date_input("Filtrar por fecha de recepción (Opcional)", value=None)
@@ -415,17 +458,15 @@ elif st.session_state["nav_state"] == "admin_dashboard":
             for idx, row in df_filtrado.iterrows():
                 with st.container():
                     st.markdown(f"""
-                    <div style="padding: 15px; border: 1px solid #dcdcdc; border-radius: 8px; margin-bottom: 10px; background-color: #fafafa;">
-                        <b>⏳ Ingreso #{idx} — Proveedor: {row.get('Proveedor', 'N/A')}</b> <br>
+                    <div class="card-investigacion">
+                        <b style="color: #2c3e7d;">⏳ Ingreso #{idx} — Proveedor: {row.get('Proveedor', 'N/A')}</b> <br>
                         <span style="color: gray;">Fecha: {row.get('Fecha_Recepcion', 'N/A')} | Responsable: {row.get('Responsable', 'N/A')} | Litros: {row.get('Cantidad_Litros', 0)} L</span>
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # Botón Ver detalle
                     if st.button(f"Ver detalle completo #{idx}", key=f"btn_ver_{idx}"):
                         st.markdown(f"### 📋 Detalle del Registro #{idx}")
                         
-                        # Mostramos todas las preguntas y respuestas organizadas
                         col_d1, col_d2 = st.columns(2)
                         with col_d1:
                             st.markdown(f"**Fecha y Hora del Registro:** {row.get('Fecha_Hora', '')}")
