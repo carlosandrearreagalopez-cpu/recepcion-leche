@@ -35,25 +35,7 @@ st.markdown("""
             font-weight: bold !important;
         }
 
-        /* Ocultar el texto nativo duplicado del cargador de archivos */
-        [data-testid="stFileUploader"] section div button div {
-            visibility: hidden;
-        }
-        [data-testid="stFileUploader"] section div button::after {
-            content: "Examinar archivos";
-            visibility: visible;
-            color: #ffffff !important;
-            position: absolute;
-            left: 0; right: 0; top: 0; bottom: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        /* Caja de carga de archivos (file_uploader) */
+        /* Caja de carga de archivos (file_uploader) limpia */
         [data-testid="stFileUploader"] {
             background-color: #f8fafc !important;
             border: 2px dashed #cbd5e1 !important;
@@ -62,14 +44,6 @@ st.markdown("""
         }
         [data-testid="stFileUploader"] section {
             background-color: #f8fafc !important;
-        }
-        [data-testid="stFileUploader"] button {
-            background-color: #1e3a8a !important;
-            border: none !important;
-            border-radius: 4px !important;
-        }
-        [data-testid="stFileUploader"] button:hover {
-            background-color: #3b82f6 !important;
         }
         [data-testid="stFileUploader"] small, [data-testid="stFileUploader"] span, [data-testid="stFileUploader"] div {
             color: #334155 !important;
@@ -321,8 +295,7 @@ elif st.session_state["nav_state"] == "form":
                 agua_anadida = st.number_input("Agua res", format="%.2f", label_visibility="collapsed", key="agua")
 
             st.subheader("Evidencia fotográfica (Antibióticos)")
-            st.caption("Cargue una imagen o tome una foto de la prueba.")
-            foto_antibioticos = st.file_uploader("Subir imagen / Tomar foto", type=["jpg", "jpeg", "png"], key="foto_antibioticos")
+            foto_antibioticos = st.file_uploader("Subir imagen o tomar foto de la prueba", type=["jpg", "jpeg", "png"], key="foto_antibioticos")
 
             st.header("4. Carga/Descarga y Resolución")
             st.markdown("**Evaluación final del proceso y decisión de calidad.**")
@@ -538,7 +511,7 @@ elif st.session_state["nav_state"] == "admin_dashboard":
                         with col_d1:
                             st.markdown(f"**Fecha y Hora del Registro:** {row.get('Fecha_Hora', '')}")
                             st.markdown(f"**Responsable:** {row.get('Responsable', '')}")
-                            st.markdown(f"**Fecha de Recepción:** {row.get('Fecha_Recepción', '')}")
+                            st.markdown(f"**Fecha de Recepción:** {row.get('Fecha_Recepcion', '')}")
                             st.markdown(f"**Proveedor:** {row.get('Proveedor', '')}")
                             st.markdown(f"**Cantidad Recibida:** {row.get('Cantidad_Litros', '')} Litros")
                             st.markdown(f"**Limpieza Exterior:** {row.get('Limpieza_Exterior', '')}")
