@@ -8,7 +8,7 @@ from streamlit_drawable_canvas import st_canvas
 st.set_page_config(page_title="Recepción de Leche Cruda - LIF Brands", layout="wide")
 
 # ==========================================
-# ESTILOS CSS CON COLORES OFICIALES LIF BRANDS
+# ESTILOS CSS CON IDENTIDAD VISUAL LIF BRANDS
 # ==========================================
 st.markdown("""
     <style>
@@ -33,6 +33,39 @@ st.markdown("""
         .stTextInput label, .stSelectbox label, .stDateInput label, .stNumberInput label, .stRadio label, .stFileUploader label {
             color: #1e3a8a !important;
             font-weight: bold !important;
+        }
+
+        /* Personalización de los Radio Buttons (Círculos con los colores corporativos) */
+        div[row-widget="stRadio"] div[role="radiogroup"] label div:first-child {
+            background-color: #ffffff !important;
+            border: 2px solid #1e3a8a !important;
+        }
+        div[row-widget="stRadio"] input:checked + div div:first-child {
+            background-color: #65a30d !important; /* Verde vivo de la hoja de LIF Brands */
+            border-color: #65a30d !important;
+        }
+
+        /* Limpiar y aclarar por completo la caja de carga de archivos (file_uploader) */
+        [data-testid="stFileUploader"] {
+            background-color: #f8fafc !important;
+            border: 2px dashed #cbd5e1 !important;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        [data-testid="stFileUploader"] section {
+            background-color: #f8fafc !important;
+        }
+        [data-testid="stFileUploader"] button {
+            background-color: #1e3a8a !important;
+            color: #ffffff !important;
+            border: none !important;
+            border-radius: 4px !important;
+        }
+        [data-testid="stFileUploader"] button:hover {
+            background-color: #3b82f6 !important;
+        }
+        [data-testid="stFileUploader"] small, [data-testid="stFileUploader"] span, [data-testid="stFileUploader"] div {
+            color: #334155 !important;
         }
 
         /* Botones generales (Fondo blanco, borde y texto en Azul Corporativo) */
