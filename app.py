@@ -13,7 +13,7 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.utils import get_column_letter
 
 # Importaciones para PDF
-from reportlab.lib.pagesizes import letter, landscape
+from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas as pdf_canvas
 from reportlab.platypus import Table as RLTable, TableStyle, Image as RLImage, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -92,8 +92,8 @@ def cargar_datos():
     if os.path.exists(EXCEL_FILE):
         df = pd.read_excel(EXCEL_FILE, dtype={"ID_Registro": str})
         
-        # Limpiar NaN para evitar que aparezca el texto "nan"
-        df.fillna("", inplace=True)
+        # SOLUCIÓN: Convertir a 'object' antes de rellenar con strings vacíos
+        df = df.astype(object).fillna("")
         
         columnas_requeridas = {
             "ID_Registro": "", "Estado": "Pendiente", "Responsable": "", "Fecha": "", "Hora": "",
