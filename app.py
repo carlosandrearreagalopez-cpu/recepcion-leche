@@ -454,10 +454,38 @@ elif st.session_state["nav_state"] == "admin_dashboard":
 
         espaciador = " " * (1 if index_key == "pen" else 2 if index_key == "apr" else 3 if index_key == "rec" else 4)
         with st.expander(f"Ver detalles de Análisis #{row['ID_Registro']}{espaciador}"):
-            st.write(f"**Temperatura:** {row['Temperatura_C']} °C | **pH:** {row['pH']} | **Densidad:** {row['Densidad']} | **Acidez:** {row['Acido_Lactico']}")
-            st.write(f"**Resolución:** {row['Resolucion']} | **Limpieza:** {row['Limpieza_Exterior']} | **Antibióticos:** {row['Antibioticos']}")
-            st.write("---")
             
+            st.markdown("#### 1. Transporte y Generales")
+            st.write(f"**Limpieza Exterior:** {row.get('Limpieza_Exterior','')} | **Salidas Selladas:** {row.get('Salidas_Selladas','')} | **Desinfección:** {row.get('Desinfeccion_Utensilios','')}")
+            
+            st.markdown("#### 2. Análisis Fisicoquímico")
+            d_cf1, d_cf2, d_cf3 = st.columns(3)
+            with d_cf1:
+                st.write(f"**Temperatura:** {row.get('Temperatura_C','')} °C")
+                st.write(f"**Color:** {row.get('Color','')}")
+                st.write(f"**Olor:** {row.get('Olor','')}")
+                st.write(f"**Sabor:** {row.get('Sabor','')}")
+                st.write(f"**Apariencia:** {row.get('Apariencia','')}")
+                st.write(f"**pH:** {row.get('pH','')}")
+            with d_cf2:
+                st.write(f"**% Grasa:** {row.get('Grasa','')}")
+                st.write(f"**Densidad:** {row.get('Densidad','')}")
+                st.write(f"**Lactosa:** {row.get('Lactosa','')}")
+                st.write(f"**Antibióticos:** {row.get('Antibioticos','')}")
+                st.write(f"**Acido Láctico:** {row.get('Acido_Lactico','')}")
+                st.write(f"**% SNG:** {row.get('Solido_No_Graso','')}")
+            with d_cf3:
+                st.write(f"**Congelación:** {row.get('Punto_Congelacion','')}")
+                st.write(f"**Conductividad:** {row.get('Conductividad','')}")
+                st.write(f"**Peróxido:** {row.get('Peroxido','')}")
+                st.write(f"**% Sólido Total:** {row.get('Solido_Total','')}")
+                st.write(f"**% Proteína:** {row.get('Proteina','')}")
+                st.write(f"**% Agua Añadida:** {row.get('Agua_Anadida','')}")
+
+            st.markdown("#### 3. Resolución")
+            st.write(f"**Proceso de carga adecuado:** {row.get('Carga_Adecuada','')} | **Afectó ambiente:** {row.get('Afecto_Ambiente','')} | **Resolución Planta:** {row.get('Resolucion','')}")
+            
+            st.markdown("---")
             if "Evidencia" in row and pd.notna(row["Evidencia"]) and row["Evidencia"] != "":
                 ruta_evidencia = os.path.join(EVIDENCIAS_DIR, str(row["Evidencia"]))
                 if os.path.exists(ruta_evidencia):
@@ -478,16 +506,26 @@ elif st.session_state["nav_state"] == "admin_dashboard":
 
                 modo_firma = "Usar firma guardada"
                 if tiene_firma_previa:
-                    st.info(f"Firma registrada previamente.")
-                    st.image(firma_path_guardada, width=200, caption=f"Firma actual")
+                    st.info(f"Se encontró una firma registrada previamente para **{nombre_jefe}**.")
+                    st.image(firma_path_guardada, width=300, caption=f"Firma asociada a {nombre_jefe}")
                     modo_firma = st.radio("Seleccione opción de firma", ["Usar firma guardada", "Dibujar nueva firma"], horizontal=True, key=f"radio_firma_{row['ID_Registro']}")
                 else:
-                    st.warning("No hay firma guardada. Dibújela abajo (se guardará para futuros registros).")
+                    st.warning(f"No hay una firma guardada para **{nombre_jefe}**. Por favor dibújela (se guardará automáticamente para futuros registros).")
                     modo_firma = "Dibujar nueva firma"
 
                 canvas_result = None
                 if modo_firma == "Dibujar nueva firma":
-                    canvas_result = st_canvas(fill_color="rgba(101, 163, 13, 0.3)", stroke_width=2, stroke_color="#1e3a8a", background_color="#FFFFFF", height=120, width=400, drawing_mode="freedraw", key=f"canvas_firma_{row['ID_Registro']}")
+                    st.markdown("Dibuje su firma en el recuadro:")
+                    canvas_result = st_canvas(
+                        fill_color="rgba(101, 163, 13, 0.3)",
+                        stroke_width=2,
+                        stroke_color="#1e3a8a",
+                        background_color="#FFFFFF",
+                        height=150,
+                        width=500,
+                        drawing_mode="freedraw",
+                        key=f"canvas_firma_{row['ID_Registro']}",
+                    )
 
                 obs_jefe = st.text_area("Añadir observaciones de calidad (Opcional):", key=f"obs_jefe_{row['ID_Registro']}")
                 st.markdown("<br>", unsafe_allow_html=True)
