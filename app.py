@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+import numpy as np
 from datetime import datetime
 from streamlit_drawable_canvas import st_canvas
 import io
@@ -98,13 +99,13 @@ def cargar_datos():
             "Solido_Total": 0.0, "Densidad": 0.0, "Punto_Congelacion": 0.0, "Proteina": 0.0, 
             "Lactosa": 0.0, "Conductividad": 0.0, "Agua_Anadida": 0.0, "Antibioticos": "", 
             "Peroxido": "", "Carga_Adecuada": "", "Afecto_Ambiente": "", "Resolucion": "",
-            "Evidencia": "", "Firma_Jefe": "Sin firma", "Observaciones_Jefe": ""
+            "Evidencia": "", "Firma_Colaborador": "Sin firma", "Firma_Jefe": "Sin firma", "Observaciones_Jefe": ""
         }
         for col, val_default in columnas_requeridas.items():
             if col not in df.columns:
                 df[col] = val_default
         
-        for col in ["Estado", "Firma_Jefe", "Observaciones_Jefe", "Evidencia"]:
+        for col in ["Estado", "Firma_Colaborador", "Firma_Jefe", "Observaciones_Jefe", "Evidencia"]:
             df[col] = df[col].astype(str)
         return df
     return pd.DataFrame()
@@ -153,7 +154,7 @@ def generar_excel_bytes(df):
     return output.getvalue()
 
 # ==========================================
-# GENERADOR DE PDF (Formato Oficial de Leche)
+# GENERADOR DE PDF
 # ==========================================
 def generar_pdf_nuevo(registro):
     buffer = io.BytesIO()
@@ -202,26 +203,14 @@ def generar_pdf_nuevo(registro):
     style = TableStyle([
         ('GRID', (0,0), (-1,-1), 1, colors.black), 
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        
-        # Header Spans
-        ('SPAN', (1,0), (2,0)), 
-        ('SPAN', (2,2), (3,2)), 
-        
-        # Transporte Spans
+        ('SPAN', (1,0), (2,0)), ('SPAN', (2,2), (3,2)), 
         ('SPAN', (0,3), (3,3)), ('BACKGROUND', (0,3), (3,3), colors.lightgrey),
         ('SPAN', (2,4), (3,6)), ('VALIGN', (2,4), (3,6), 'TOP'),
-        
-        # FQ Spans
         ('SPAN', (0,7), (3,7)), ('BACKGROUND', (0,7), (3,7), colors.lightgrey),
-        
-        # Resolucion Spans
         ('SPAN', (0,17), (3,17)), ('BACKGROUND', (0,17), (3,17), colors.lightgrey),
-        
-        # Firmas span area
         ('SPAN', (3,20), (3,20)), 
     ])
     
-    # Alturas de fila adaptadas
     row_heights = [35] + [20]*2 + [18] + [25]*3 + [18] + [22]*9 + [18] + [25]*2 + [40]
     t = RLTable(data, colWidths=col_widths, rowHeights=row_heights)
     t.setStyle(style)
@@ -230,14 +219,12 @@ def generar_pdf_nuevo(registro):
     y_pos_table = height - margin_y - h
     t.drawOn(c, margin_x, y_pos_table)
     
-    # Colocar la firma del Jefe de Calidad en la última celda ("Verificado por")
+    # Firma Jefe en PDF
     nombre_firma = registro.get("Firma_Jefe", "Sin firma")
     ruta_firma = os.path.join(FIRMAS_DIR, str(nombre_firma))
-    
     if nombre_firma != "Sin firma" and os.path.exists(ruta_firma):
-        # Coordenadas relativas a la tabla (Columna 3, Fila 20)
         x_firma = margin_x + col_widths[0] + col_widths[1] + col_widths[2] + 10
-        y_firma = y_pos_table + 5 # Posición bottom de la tabla
+        y_firma = y_pos_table + 5
         c.drawImage(ruta_firma, x_firma, y_firma, width=100, height=35, preserveAspectRatio=True, mask='auto')
     
     c.save()
@@ -364,7 +351,7 @@ elif st.session_state["nav_state"] == "form":
                 proteina = st.number_input("% Proteína", format="%.2f")
                 agua = st.number_input("% Agua Añadida", format="%.2f")
 
-            st.header("4. Resolución y Evidencia")
+            st.header("4. Resolución y Evidencias")
             cr1, cr2, cr3 = st.columns(3)
             with cr1: adecuado = st.radio("Proceso adecuado", ["Si", "No"], horizontal=True)
             with cr2: afecto = st.radio("Afectó ambiente", ["Si", "No"], horizontal=True)
@@ -372,16 +359,31 @@ elif st.session_state["nav_state"] == "form":
 
             evidencia_foto = st.file_uploader("Evidencia fotográfica (Antibióticos u otros)", type=["png", "jpg", "jpeg"])
 
+            st.markdown("### Firma del Responsable (Colaborador)")
+            canvas_colab = st_canvas(
+                fill_color="rgba(101, 163, 13, 0.3)", stroke_width=2, stroke_color="#1e3a8a", 
+                background_color="#FFFFFF", height=150, width=500, key="canvas_firma_colab"
+            )
+
             submitted = st.form_submit_button("Guardar y Enviar a Revisión", type="primary")
             
             if submitted:
                 id_nuevo = generar_id_registro()
+                
+                # Guardar evidencia
                 nombre_evidencia = ""
                 if evidencia_foto is not None:
                     img = Image.open(evidencia_foto)
                     if img.mode != 'RGB': img = img.convert('RGB')
                     nombre_evidencia = f"evidencia_{id_nuevo}.jpg"
                     img.save(os.path.join(EVIDENCIAS_DIR, nombre_evidencia))
+                
+                # Guardar firma de colaborador
+                nombre_firma_colab = "Sin firma"
+                if canvas_colab is not None and canvas_colab.image_data is not None:
+                    img_colab = Image.fromarray(canvas_colab.image_data.astype('uint8'), mode="RGBA")
+                    nombre_firma_colab = f"firma_colab_{id_nuevo}.png"
+                    img_colab.save(os.path.join(FIRMAS_DIR, nombre_firma_colab))
 
                 nuevo_registro = {
                     "ID_Registro": str(id_nuevo), "Estado": "Pendiente",
@@ -394,7 +396,8 @@ elif st.session_state["nav_state"] == "form":
                     "Proteina": float(proteina), "Lactosa": float(lactosa), "Conductividad": float(conductividad), 
                     "Agua_Anadida": float(agua), "Antibioticos": str(antibioticos), "Peroxido": str(peroxido),
                     "Carga_Adecuada": str(adecuado), "Afecto_Ambiente": str(afecto), "Resolucion": str(resolucion),
-                    "Evidencia": str(nombre_evidencia), "Firma_Jefe": "Sin firma", "Observaciones_Jefe": ""
+                    "Evidencia": str(nombre_evidencia), "Firma_Colaborador": str(nombre_firma_colab), 
+                    "Firma_Jefe": "Sin firma", "Observaciones_Jefe": ""
                 }
                 df = cargar_datos()
                 df = pd.concat([df, pd.DataFrame([nuevo_registro])], ignore_index=True)
@@ -486,11 +489,29 @@ elif st.session_state["nav_state"] == "admin_dashboard":
             st.write(f"**Proceso de carga adecuado:** {row.get('Carga_Adecuada','')} | **Afectó ambiente:** {row.get('Afecto_Ambiente','')} | **Resolución Planta:** {row.get('Resolucion','')}")
             
             st.markdown("---")
-            if "Evidencia" in row and pd.notna(row["Evidencia"]) and row["Evidencia"] != "":
-                ruta_evidencia = os.path.join(EVIDENCIAS_DIR, str(row["Evidencia"]))
-                if os.path.exists(ruta_evidencia):
-                    st.write("**Evidencia Fotográfica adjunta:**")
-                    st.image(ruta_evidencia, width=350)
+            st.markdown("#### 4. Evidencias y Firmas")
+            col_evi1, col_evi2 = st.columns(2)
+            with col_evi1:
+                st.markdown("**Evidencia Fotográfica**")
+                if "Evidencia" in row and pd.notna(row["Evidencia"]) and row["Evidencia"] != "":
+                    ruta_evidencia = os.path.join(EVIDENCIAS_DIR, str(row["Evidencia"]))
+                    if os.path.exists(ruta_evidencia):
+                        st.image(ruta_evidencia, width=250)
+                    else:
+                        st.info("Archivo de evidencia no encontrado.")
+                else:
+                    st.info("Sin evidencia adjunta.")
+                    
+            with col_evi2:
+                st.markdown("**Firma Colaborador**")
+                if "Firma_Colaborador" in row and pd.notna(row["Firma_Colaborador"]) and row["Firma_Colaborador"] not in ["", "Sin firma"]:
+                    ruta_firma_colab = os.path.join(FIRMAS_DIR, str(row["Firma_Colaborador"]))
+                    if os.path.exists(ruta_firma_colab):
+                        st.image(ruta_firma_colab, width=250)
+                    else:
+                        st.info("Archivo de firma no encontrado.")
+                else:
+                    st.info("Sin firma registrada.")
             
             if pd.notna(row.get("Observaciones_Jefe", "")) and str(row.get("Observaciones_Jefe", "")) != "":
                 st.warning(f"**Observaciones de Calidad:** {row['Observaciones_Jefe']}")
@@ -508,7 +529,12 @@ elif st.session_state["nav_state"] == "admin_dashboard":
                 if tiene_firma_previa:
                     st.info(f"Se encontró una firma registrada previamente para **{nombre_jefe}**.")
                     st.image(firma_path_guardada, width=300, caption=f"Firma asociada a {nombre_jefe}")
-                    modo_firma = st.radio("Seleccione opción de firma", ["Usar firma guardada", "Dibujar nueva firma"], horizontal=True, key=f"radio_firma_{row['ID_Registro']}")
+                    modo_firma = st.radio(
+                        "Seleccione opción de firma", 
+                        ["Usar firma guardada", "Dibujar nueva firma"], 
+                        horizontal=True, 
+                        key=f"radio_firma_{row['ID_Registro']}"
+                    )
                 else:
                     st.warning(f"No hay una firma guardada para **{nombre_jefe}**. Por favor dibújela (se guardará automáticamente para futuros registros).")
                     modo_firma = "Dibujar nueva firma"
@@ -533,7 +559,7 @@ elif st.session_state["nav_state"] == "admin_dashboard":
                 c_rev1, c_rev2 = st.columns(2)
                 with c_rev1:
                     if st.button("✅ Aprobar Registro", key=f"btn_aprobar_{row['ID_Registro']}", type="primary"):
-                        nombre_firma_archivo = f"firma_{row['ID_Registro']}.png"
+                        nombre_firma_archivo = f"firma_jefe_{row['ID_Registro']}.png"
                         ruta_destino = os.path.join(FIRMAS_DIR, nombre_firma_archivo)
                         
                         if modo_firma == "Usar firma guardada" and tiene_firma_previa:
