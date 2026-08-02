@@ -91,6 +91,10 @@ def mostrar_logo(ancho=160):
 def cargar_datos():
     if os.path.exists(EXCEL_FILE):
         df = pd.read_excel(EXCEL_FILE, dtype={"ID_Registro": str})
+        
+        # Limpiar NaN para evitar que aparezca el texto "nan"
+        df.fillna("", inplace=True)
+        
         columnas_requeridas = {
             "ID_Registro": "", "Estado": "Pendiente", "Responsable": "", "Fecha": "", "Hora": "",
             "Proveedor": "", "Cantidad_Litros": 0.0, "Limpieza_Exterior": "", "Salidas_Selladas": "", 
@@ -99,13 +103,13 @@ def cargar_datos():
             "Solido_Total": 0.0, "Densidad": 0.0, "Punto_Congelacion": 0.0, "Proteina": 0.0, 
             "Lactosa": 0.0, "Conductividad": 0.0, "Agua_Anadida": 0.0, "Antibioticos": "", 
             "Peroxido": "", "Carga_Adecuada": "", "Afecto_Ambiente": "", "Resolucion": "",
-            "Evidencia": "", "Firma_Colaborador": "Sin firma", "Firma_Jefe": "Sin firma", "Observaciones_Jefe": ""
+            "Evidencia": "", "Firma_Colaborador": "Sin firma", "Nombre_Jefe": "", "Firma_Jefe": "Sin firma", "Observaciones_Jefe": ""
         }
         for col, val_default in columnas_requeridas.items():
             if col not in df.columns:
                 df[col] = val_default
         
-        for col in ["Estado", "Firma_Colaborador", "Firma_Jefe", "Observaciones_Jefe", "Evidencia"]:
+        for col in ["Estado", "Firma_Colaborador", "Nombre_Jefe", "Firma_Jefe", "Observaciones_Jefe", "Evidencia"]:
             df[col] = df[col].astype(str)
         return df
     return pd.DataFrame()
@@ -154,7 +158,7 @@ def generar_excel_bytes(df):
     return output.getvalue()
 
 # ==========================================
-# GENERADOR DE PDF
+# GENERADOR DE PDF (Formato Oficial + Fotos + Firmas)
 # ==========================================
 def generar_pdf_nuevo(registro):
     buffer = io.BytesIO()
@@ -197,21 +201,32 @@ def generar_pdf_nuevo(registro):
         [Paragraph("Resolución y Recepción de Leche", style_center_bold), "", "", ""],
         [Paragraph("Estado Final:", style_bold), Paragraph(str(registro.get('Estado', '')), style_bold), Paragraph("Resolución de Planta:", style_bold), Paragraph(str(registro.get('Resolucion', '')), style_normal)],
         [Paragraph("¿El proceso de carga/descarga fue adecuado?", style_normal), Paragraph(str(registro.get('Carga_Adecuada', '')), style_normal), Paragraph("¿Afectó de forma potencial al medio ambiente?", style_normal), Paragraph(str(registro.get('Afecto_Ambiente', '')), style_normal)],
-        [Paragraph("Realizado por:", style_bold), Paragraph(str(registro.get('Responsable', '')), style_normal), Paragraph("Verificado por:", style_bold), ""],
+        [Paragraph("Realizado por:", style_bold), Paragraph(str(registro.get('Responsable', '')), style_normal), Paragraph("Verificado por:", style_bold), Paragraph(str(registro.get('Nombre_Jefe', '')), style_normal)],
     ]
     
     style = TableStyle([
         ('GRID', (0,0), (-1,-1), 1, colors.black), 
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('SPAN', (1,0), (2,0)), ('SPAN', (2,2), (3,2)), 
+        
+        # Header Spans
+        ('SPAN', (1,0), (2,0)), 
+        ('SPAN', (2,2), (3,2)), 
+        
+        # Transporte Spans
         ('SPAN', (0,3), (3,3)), ('BACKGROUND', (0,3), (3,3), colors.lightgrey),
         ('SPAN', (2,4), (3,6)), ('VALIGN', (2,4), (3,6), 'TOP'),
+        
+        # FQ Spans
         ('SPAN', (0,7), (3,7)), ('BACKGROUND', (0,7), (3,7), colors.lightgrey),
+        
+        # Resolucion Spans
         ('SPAN', (0,17), (3,17)), ('BACKGROUND', (0,17), (3,17), colors.lightgrey),
-        ('SPAN', (3,20), (3,20)), 
+        
+        # Alineación TOP para la fila de las firmas (Para dar espacio a la imagen abajo del texto)
+        ('VALIGN', (0,20), (-1,20), 'TOP'),
     ])
     
-    row_heights = [35] + [20]*2 + [18] + [25]*3 + [18] + [22]*9 + [18] + [25]*2 + [40]
+    row_heights = [35] + [20]*2 + [18] + [25]*3 + [18] + [22]*9 + [18] + [25]*2 + [50] # Última fila más alta para firmas
     t = RLTable(data, colWidths=col_widths, rowHeights=row_heights)
     t.setStyle(style)
     
@@ -219,14 +234,37 @@ def generar_pdf_nuevo(registro):
     y_pos_table = height - margin_y - h
     t.drawOn(c, margin_x, y_pos_table)
     
-    # Firma Jefe en PDF
-    nombre_firma = registro.get("Firma_Jefe", "Sin firma")
-    ruta_firma = os.path.join(FIRMAS_DIR, str(nombre_firma))
-    if nombre_firma != "Sin firma" and os.path.exists(ruta_firma):
-        x_firma = margin_x + col_widths[0] + col_widths[1] + col_widths[2] + 10
-        y_firma = y_pos_table + 5
-        c.drawImage(ruta_firma, x_firma, y_firma, width=100, height=35, preserveAspectRatio=True, mask='auto')
+    # 1. Firma Colaborador (Realizado por)
+    nombre_firma_colab = registro.get("Firma_Colaborador", "")
+    ruta_firma_colab = os.path.join(FIRMAS_DIR, str(nombre_firma_colab))
+    if nombre_firma_colab not in ["", "Sin firma", "nan"] and os.path.exists(ruta_firma_colab):
+        x_firma_colab = margin_x + col_widths[0] + 5
+        y_firmas = y_pos_table + 3
+        c.drawImage(ruta_firma_colab, x_firma_colab, y_firmas, width=80, height=30, preserveAspectRatio=True, mask='auto')
+
+    # 2. Firma Administrador (Verificado por)
+    nombre_firma_jefe = registro.get("Firma_Jefe", "")
+    ruta_firma_jefe = os.path.join(FIRMAS_DIR, str(nombre_firma_jefe))
+    if nombre_firma_jefe not in ["", "Sin firma", "nan"] and os.path.exists(ruta_firma_jefe):
+        x_firma_jefe = margin_x + col_widths[0] + col_widths[1] + col_widths[2] + 5
+        c.drawImage(ruta_firma_jefe, x_firma_jefe, y_firmas, width=80, height=30, preserveAspectRatio=True, mask='auto')
     
+    # 3. Evidencia de prueba de antibiótico (Debajo de la tabla)
+    evidencia = registro.get("Evidencia", "")
+    ruta_evidencia = os.path.join(EVIDENCIAS_DIR, str(evidencia))
+    
+    y_evidencia_title = y_pos_table - 25
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(margin_x, y_evidencia_title, "Evidencia de prueba de antibiótico:")
+    
+    if evidencia not in ["", "nan"] and os.path.exists(ruta_evidencia):
+        img_width, img_height = 200, 150
+        y_evidencia_img = y_evidencia_title - 10 - img_height
+        c.drawImage(ruta_evidencia, margin_x, y_evidencia_img, width=img_width, height=img_height, preserveAspectRatio=True)
+    else:
+        c.setFont("Helvetica", 9)
+        c.drawString(margin_x, y_evidencia_title - 15, "(No se adjuntó evidencia fotográfica al registro)")
+
     c.save()
     buffer.seek(0)
     return buffer.getvalue()
@@ -255,7 +293,7 @@ if st.session_state["nav_state"] == "home":
             st.rerun()
             
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🔒 Jefe de Calidad: Panel de Administración", use_container_width=True):
+        if st.button("🔒 Administrador: Panel de Aprobación", use_container_width=True):
             st.session_state["nav_state"] = "admin_login"
             st.rerun()
 
@@ -357,7 +395,7 @@ elif st.session_state["nav_state"] == "form":
             with cr2: afecto = st.radio("Afectó ambiente", ["Si", "No"], horizontal=True)
             with cr3: resolucion = st.radio("Resolución Planta", ["Aceptado", "Rechazado"], horizontal=True)
 
-            evidencia_foto = st.file_uploader("Evidencia fotográfica (Antibióticos u otros)", type=["png", "jpg", "jpeg"])
+            evidencia_foto = st.file_uploader("Evidencia de prueba de antibiótico", type=["png", "jpg", "jpeg"])
 
             st.markdown("### Firma del Responsable (Colaborador)")
             canvas_colab = st_canvas(
@@ -397,7 +435,7 @@ elif st.session_state["nav_state"] == "form":
                     "Agua_Anadida": float(agua), "Antibioticos": str(antibioticos), "Peroxido": str(peroxido),
                     "Carga_Adecuada": str(adecuado), "Afecto_Ambiente": str(afecto), "Resolucion": str(resolucion),
                     "Evidencia": str(nombre_evidencia), "Firma_Colaborador": str(nombre_firma_colab), 
-                    "Firma_Jefe": "Sin firma", "Observaciones_Jefe": ""
+                    "Nombre_Jefe": "", "Firma_Jefe": "Sin firma", "Observaciones_Jefe": ""
                 }
                 df = cargar_datos()
                 df = pd.concat([df, pd.DataFrame([nuevo_registro])], ignore_index=True)
@@ -414,7 +452,7 @@ elif st.session_state["nav_state"] == "admin_dashboard":
         st.rerun()
         
     c_head1, c_head2 = st.columns([5, 1])
-    with c_head1: st.title("Panel de Administrador - Jefe de Calidad")
+    with c_head1: st.title("Panel de Administrador - Aprobación de Registros")
     with c_head2:
         if st.button("Cerrar sesión"):
             st.session_state["admin_logueado"] = False
@@ -492,8 +530,8 @@ elif st.session_state["nav_state"] == "admin_dashboard":
             st.markdown("#### 4. Evidencias y Firmas")
             col_evi1, col_evi2 = st.columns(2)
             with col_evi1:
-                st.markdown("**Evidencia Fotográfica**")
-                if "Evidencia" in row and pd.notna(row["Evidencia"]) and row["Evidencia"] != "":
+                st.markdown("**Evidencia de prueba de antibiótico**")
+                if "Evidencia" in row and pd.notna(row["Evidencia"]) and row["Evidencia"] not in ["", "nan"]:
                     ruta_evidencia = os.path.join(EVIDENCIAS_DIR, str(row["Evidencia"]))
                     if os.path.exists(ruta_evidencia):
                         st.image(ruta_evidencia, width=250)
@@ -504,7 +542,7 @@ elif st.session_state["nav_state"] == "admin_dashboard":
                     
             with col_evi2:
                 st.markdown("**Firma Colaborador**")
-                if "Firma_Colaborador" in row and pd.notna(row["Firma_Colaborador"]) and row["Firma_Colaborador"] not in ["", "Sin firma"]:
+                if "Firma_Colaborador" in row and pd.notna(row["Firma_Colaborador"]) and row["Firma_Colaborador"] not in ["", "Sin firma", "nan"]:
                     ruta_firma_colab = os.path.join(FIRMAS_DIR, str(row["Firma_Colaborador"]))
                     if os.path.exists(ruta_firma_colab):
                         st.image(ruta_firma_colab, width=250)
@@ -518,9 +556,13 @@ elif st.session_state["nav_state"] == "admin_dashboard":
             
             if allow_review and row['Estado'] == "Pendiente":
                 st.markdown("---")
-                st.markdown("### Validación y Firma (Jefe de Calidad)")
+                st.markdown("### Validación y Firma (Administrador)")
                 
-                nombre_jefe = "Jefe de Calidad"
+                nombre_jefe = st.selectbox(
+                    "Nombre del Administrador", 
+                    ["Marlon Escobar", "Luis Perez", "Carlos López"], 
+                    key=f"jefe_nombre_{row['ID_Registro']}"
+                )
                 safe_name = nombre_jefe.replace(" ", "_").lower()
                 firma_path_guardada = os.path.join(FIRMAS_REGISTRADAS_DIR, f"firma_reg_{safe_name}.png")
                 tiene_firma_previa = os.path.exists(firma_path_guardada)
@@ -577,6 +619,7 @@ elif st.session_state["nav_state"] == "admin_dashboard":
 
                         df_act = cargar_datos()
                         df_act.loc[df_act['ID_Registro'] == str(row['ID_Registro']), 'Estado'] = "Aprobado"
+                        df_act.loc[df_act['ID_Registro'] == str(row['ID_Registro']), 'Nombre_Jefe'] = str(nombre_jefe)
                         df_act.loc[df_act['ID_Registro'] == str(row['ID_Registro']), 'Firma_Jefe'] = str(nombre_firma_archivo)
                         df_act.loc[df_act['ID_Registro'] == str(row['ID_Registro']), 'Observaciones_Jefe'] = str(obs_jefe)
                         guardar_datos(df_act)
@@ -587,6 +630,7 @@ elif st.session_state["nav_state"] == "admin_dashboard":
                     if st.button("❌ Rechazar Registro", key=f"btn_rechazar_{row['ID_Registro']}"):
                         df_act = cargar_datos()
                         df_act.loc[df_act['ID_Registro'] == str(row['ID_Registro']), 'Estado'] = "Rechazado"
+                        df_act.loc[df_act['ID_Registro'] == str(row['ID_Registro']), 'Nombre_Jefe'] = str(nombre_jefe)
                         df_act.loc[df_act['ID_Registro'] == str(row['ID_Registro']), 'Observaciones_Jefe'] = str(obs_jefe)
                         guardar_datos(df_act)
                         st.warning("Registro Rechazado.")
