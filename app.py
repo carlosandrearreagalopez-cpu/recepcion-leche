@@ -190,9 +190,9 @@ if st.session_state["nav_state"] == "home":
     with col2:
         st.markdown("<br><br>", unsafe_allow_html=True)
         mostrar_logo(ancho=200)
-        st.markdown("<h1 style='text-align: center; color: #1e3a8a;'>Ingresos a bodega</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; color: #1e3a8a;'>Registro de Recepción de Leche</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #65a30d; font-weight: bold; font-size: 16px;'>LIF Brands Aseguramiento de Calidad</p>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #475569;'>Documentación de recepción de materiales</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #475569;'>Documentación de recepción de materia prima</p>", unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("Reportar nuevo ingreso", use_container_width=True, type="primary"):
@@ -450,7 +450,7 @@ elif st.session_state["nav_state"] == "form":
                     "Conductividad": conductividad,
                     "Agua_Anadida": agua_anadida,
                     "Antibioticos_Resultado": antibioticos_res,
-                    "Peroxido": peroxido,
+                    "Peróxido": peroxido,
                     "Evidencia_Foto": nombre_foto_guardada,
                     "Carga_Adecuada": adecuado_proceso,
                     "Afecto_Ambiente": afecto_ambiente,
